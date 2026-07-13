@@ -6,7 +6,7 @@
 ## 2. release-please configuration
 
 - [x] 2.1 Add `release-please-config.json` (release type resolved at design — `simple` or `php`, tag format `vX.Y.Z`, changelog on, package at repo root)
-- [x] 2.2 Add `.release-please-manifest.json` seeded to `0.1.0`
+- [x] 2.2 Add `.release-please-manifest.json` seeded to `0.0.0` (so the first release computes to `0.1.0`)
 - [x] 2.3 Confirm 0.x bump semantics are in effect (breaking → minor while under 1.0)
 
 ## 3. release-please workflow
@@ -17,7 +17,7 @@
 
 ## 4. Commit message enforcement
 
-- [x] 4.1 Add `commitlint.config.js` extending `@commitlint/config-conventional`
+- [x] 4.1 Add `commitlint.config.cjs` extending `@commitlint/config-conventional`
 - [x] 4.2 Add `.github/workflows/commitlint.yml` on `pull_request` that lints every commit in the PR (merge-commit workflow) and ignores GitHub merge commits
 - [x] 4.3 Verify a non-conventional commit fails the check and a conventional one passes
 

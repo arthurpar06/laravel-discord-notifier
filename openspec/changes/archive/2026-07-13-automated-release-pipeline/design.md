@@ -26,7 +26,7 @@ release-please watches `main`, maintains a Release PR with the computed version 
 *Alternatives:* **semantic-release** (fully zero-touch, tags on every releasing push) — rejected for removing the human ship-it gate and being Node-ecosystem heavy; **manual + changelog-updater** (the skeleton's model) — rejected because it is not automatic versioning. release-please keeps automation while preserving a merge-time gate, and the tag it creates is what triggers Packagist.
 
 ### Start at 0.1.0 with 0.x semantics
-Seed `.release-please-manifest.json` at `0.1.0`. While under 1.0, breaking changes bump the minor, signaling an unstable API (components/V2 still to come).
+Seed `.release-please-manifest.json` at `0.0.0` so the first computed release resolves to `0.1.0` (a `feat:` minor bump under pre-major semantics). While under 1.0, breaking changes bump the minor, signaling an unstable API (components/V2 still to come).
 *Alternative:* plant 1.0.0 now — rejected as premature stability commitment for a young API.
 
 ### Packagist via webhook only
@@ -34,7 +34,7 @@ The `vX.Y.Z` tag push fires the GitHub→Packagist webhook, which publishes. No 
 *Alternative:* add a post-release Packagist API `POST` (needs `PACKAGIST_USERNAME`/`PACKAGIST_TOKEN`) — rejected for now as a fix for an unobserved problem; it is a small backward-compatible follow-up if the webhook ever proves flaky. Note: this webhook is a GitHub-native repo hook to an external service, so the "GITHUB_TOKEN doesn't trigger other workflows" limitation does not apply — release-please-created tags still fire it.
 
 ### commitlint on pull_request, linting every commit
-Use the commitlint GitHub Action with `@commitlint/config-conventional`. Because the project uses merge commits, it lints each commit in the PR (not a PR title), and it ignores GitHub merge commits by default. commitlint runs inside the Action, so only a small `commitlint.config.js` lives in the repo — no npm dependency added to the package.
+Use the commitlint GitHub Action with `@commitlint/config-conventional`. Because the project uses merge commits, it lints each commit in the PR (not a PR title), and it ignores GitHub merge commits by default. commitlint runs inside the Action, so only a small `commitlint.config.cjs` lives in the repo — no npm dependency added to the package.
 *Alternative:* PR-title lint only — rejected because with merge commits the individual commit messages are what land on `main` and drive versioning.
 
 ### Branch protection documented, not committed
@@ -49,7 +49,7 @@ release-please owns `CHANGELOG.md`; keeping the skeleton workflow would double-w
 - **Direct pushes to `main` bypass commitlint** → mitigated by the documented branch-protection rule; residual risk accepted until that rule is enabled.
 - **Webhook could silently fail, delaying a publish** → accepted for now; Packagist still crawls periodically, and the API-push step is an easy later addition.
 - **release-please tooling/action versions drift** → pin the action to a major version; revisit at implementation time.
-- **First run needs the manifest seeded correctly** or release-please may mis-detect the starting version → seed `.release-please-manifest.json` to `0.1.0` explicitly and verify the first Release PR targets `0.1.0`.
+- **First run needs the manifest seeded correctly** or release-please may mis-detect the starting version → seed `.release-please-manifest.json` to `0.0.0` so the first Release PR targets `0.1.0`, and verify it does.
 
 ## Open Questions
 

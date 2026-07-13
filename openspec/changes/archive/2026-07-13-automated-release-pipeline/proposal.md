@@ -14,7 +14,7 @@ Releasing the package today is entirely manual and the skeleton's `update-change
 ## Capabilities
 
 ### New Capabilities
-- `release-automation`: Conventional-Commits-driven version computation, changelog generation, and GitHub Release/tag creation via release-please, including the 0.1.0 seed and 0.x bump semantics.
+- `release-automation`: Conventional-Commits-driven version computation, changelog generation, and GitHub Release/tag creation via release-please, including the `0.1.0` start and 0.x bump semantics.
 - `package-publishing`: Publication of tagged releases to Packagist via the GitHub webhook, and the documented one-time registration/webhook setup.
 - `commit-conventions`: Enforcement of Conventional Commit messages on pull requests as the input contract the versioning engine depends on.
 
@@ -24,7 +24,7 @@ Releasing the package today is entirely manual and the skeleton's `update-change
 ## Impact
 
 - **Workflows**: adds `.github/workflows/release-please.yml` and `.github/workflows/commitlint.yml`; deletes `.github/workflows/update-changelog.yml`. Existing `run-tests.yml`, `phpstan.yml`, `fix-php-code-style-issues.yml` are untouched.
-- **New config files**: `release-please-config.json`, `.release-please-manifest.json` (seeded `0.1.0`), and `commitlint.config.js` (extends `@commitlint/config-conventional`). No PHP/Composer dependencies added — commitlint runs inside its Action.
+- **New config files**: `release-please-config.json`, `.release-please-manifest.json` (seeded `0.0.0`), and `commitlint.config.cjs` (extends `@commitlint/config-conventional`). No PHP/Composer dependencies added — commitlint runs inside its Action.
 - **Repo files**: `CHANGELOG.md` reset; README/CONTRIBUTING gains a "Releasing" section documenting the Packagist webhook and branch-protection setup.
 - **`composer.json`**: unchanged — it already omits the `version` field, which Packagist requires for tag-derived versioning.
 - **Contributor workflow**: commit messages must follow Conventional Commits; `main` should require PRs.
