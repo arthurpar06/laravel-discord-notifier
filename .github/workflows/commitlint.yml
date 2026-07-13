@@ -1,0 +1,23 @@
+name: commitlint
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          # Full history so every commit in the PR range can be linted.
+          fetch-depth: 0
+
+      # Lints each non-merge commit in the pull request against
+      # commitlint.config.cjs. GitHub merge commits are ignored by default.
+      - name: Lint commit messages
+        uses: wagoid/commitlint-github-action@v6
