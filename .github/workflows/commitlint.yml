@@ -18,6 +18,6 @@ jobs:
           fetch-depth: 0
 
       # Lints each non-merge commit in the pull request against
-      # commitlint.config.js. GitHub merge commits are ignored by default.
+      # commitlint.config.cjs. GitHub merge commits are ignored by default.
       - name: Lint commit messages
         uses: wagoid/commitlint-github-action@v6
