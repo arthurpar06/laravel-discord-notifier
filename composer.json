@@ -1,17 +1,20 @@
 {
-    "name": ":vendor_slug/:package_slug",
-    "description": ":package_description",
+    "name": "arthurpar06/laravel-discord-notifier",
+    "description": "A strongly-typed way to send Discord notifications through Laravel's notification system, via webhooks or a bot.",
     "keywords": [
-        ":vendor_name",
+        "arthurpar06",
         "laravel",
-        ":package_slug"
+        "discord",
+        "notifications",
+        "webhook",
+        "discord-notifier"
     ],
-    "homepage": "https://github.com/:vendor_slug/:package_slug",
+    "homepage": "https://github.com/arthurpar06/laravel-discord-notifier",
     "license": "MIT",
     "authors": [
         {
-            "name": ":author_name",
-            "email": "author@domain.com",
+            "name": "Arthur Parienté",
+            "email": "edouard.rgrs@gmail.com",
             "role": "Developer"
         }
     ],
@@ -35,13 +38,12 @@
     },
     "autoload": {
         "psr-4": {
-            "VendorName\\Skeleton\\": "src/",
-            "VendorName\\Skeleton\\Database\\Factories\\": "database/factories/"
+            "Arthurpar06\\DiscordNotifier\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "VendorName\\Skeleton\\Tests\\": "tests/",
+            "Arthurpar06\\DiscordNotifier\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/"
         }
     },
@@ -63,11 +65,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "VendorName\\Skeleton\\SkeletonServiceProvider"
-            ],
-            "aliases": {
-                "Skeleton": "VendorName\\Skeleton\\Facades\\Skeleton"
-            }
+                "Arthurpar06\\DiscordNotifier\\DiscordNotifierServiceProvider"
+            ]
         }
     },
     "minimum-stability": "dev",
