@@ -1,92 +1,157 @@
-# :package_description
+# Laravel Discord Notifier
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/:vendor_slug/:package_slug.svg?style=flat-square)](https://packagist.org/packages/:vendor_slug/:package_slug)
-[![GitHub Tests Action Status](https://github.com/spatie/package-skeleton-laravel/actions/workflows/run-tests.yml/badge.svg)](https://github.com/:vendor_slug/:package_slug/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://github.com/spatie/package-skeleton-laravel/actions/workflows/fix-php-code-style-issues.yml/badge.svg)](https://github.com/:vendor_slug/:package_slug/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/:vendor_slug/:package_slug.svg?style=flat-square)](https://packagist.org/packages/:vendor_slug/:package_slug)
-<!--delete-->
----
-This repo can be used to scaffold a Laravel package. Follow these steps to get started:
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/arthurpar06/laravel-discord-notifier.svg?style=flat-square)](https://packagist.org/packages/arthurpar06/laravel-discord-notifier)
+[![Total Downloads](https://img.shields.io/packagist/dt/arthurpar06/laravel-discord-notifier.svg?style=flat-square)](https://packagist.org/packages/arthurpar06/laravel-discord-notifier)
 
-1. Press the "Use this template" button at the top of this repo to create a new repo with the contents of this skeleton.
-2. Run "php ./configure.php" to run a script that will replace all placeholders throughout all the files.
-3. Have fun creating your package.
-4. If you need help creating a package, consider picking up our <a href="https://laravelpackage.training">Laravel Package Training</a> video course.
----
-<!--/delete-->
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+A strongly-typed way to send Discord messages through Laravel's notification system — over a **webhook** or a **bot** — without ever hand-writing the Discord API payload again.
 
-## Support us
+```php
+use Arthurpar06\DiscordNotifier\Messages\DiscordMessage;
+use Arthurpar06\DiscordNotifier\Embeds\DiscordEmbed;
+use Arthurpar06\DiscordNotifier\Enums\DiscordColor;
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/:package_name.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/:package_name)
+DiscordMessage::make()
+    ->content('Deployment finished')
+    ->embed(
+        DiscordEmbed::make()
+            ->title('Bonjour')
+            ->description('Everything is green.')
+            ->color(DiscordColor::Green)
+            ->field('Environment', 'production', inline: true)
+    );
+```
 
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+Your IDE and the type system remember the field names, the enums, and the limits — so you don't have to reopen the Discord docs every time.
 
 ## Installation
 
-You can install the package via composer:
-
 ```bash
-composer require :vendor_slug/:package_slug
+composer require arthurpar06/laravel-discord-notifier
 ```
 
-You can publish and run the migrations with:
+Publish the config file:
 
 ```bash
-php artisan vendor:publish --tag=":package_slug-migrations"
-php artisan migrate
+php artisan vendor:publish --tag="discord-notifier-config"
 ```
 
-You can publish the config file with:
+To deliver via a bot, set your bot token in `.env`:
 
-```bash
-php artisan vendor:publish --tag=":package_slug-config"
+```dotenv
+DISCORD_BOT_TOKEN=your-bot-token
 ```
-
-This is the contents of the published config file:
 
 ```php
+// config/discord-notifier.php
 return [
+    'bot' => [
+        'token' => env('DISCORD_BOT_TOKEN'),
+        'api_base' => 'https://discord.com/api/v10',
+    ],
 ];
 ```
 
-Optionally, you can publish the views using
+There is **no default route** — every notification declares where it goes.
 
-```bash
-php artisan vendor:publish --tag=":package_slug-views"
-```
+## Building a message
 
-## Usage
+`DiscordMessage` models the [Create Message](https://docs.discord.com/developers/resources/message#create-message) body. Everything is fluent and typed:
 
 ```php
-$:variable = new VendorName\Skeleton();
-echo $:variable->echoPhrase('Hello, VendorName!');
+use Arthurpar06\DiscordNotifier\Messages\DiscordMessage;
+use Arthurpar06\DiscordNotifier\Messages\AllowedMentions;
+use Arthurpar06\DiscordNotifier\Embeds\DiscordEmbed;
+use Arthurpar06\DiscordNotifier\Enums\AllowedMentionType;
+use Arthurpar06\DiscordNotifier\Enums\MessageFlag;
+
+DiscordMessage::make()
+    ->content('Heads up <@123>')
+    ->embeds([
+        DiscordEmbed::make()
+            ->title('Report')
+            ->footer('generated automatically')
+            ->author('CI bot'),
+    ])
+    ->allowedMentions(AllowedMentions::make()->parse([AllowedMentionType::Users]))
+    ->flags(MessageFlag::SuppressNotifications);
 ```
+
+Only the fields you set are sent. Discord's limits (≤10 embeds, content ≤2000 chars, embed field caps, the `IS_COMPONENTS_V2` mutual-exclusivity rule, …) are validated when the message is serialized, with an exception that names the offending field.
+
+## Sending notifications
+
+In your notification, list `discord` in `via()` and return a `DiscordMessage` from `toDiscord()`:
+
+```php
+use Arthurpar06\DiscordNotifier\Messages\DiscordMessage;
+use Illuminate\Notifications\Notification;
+
+class DeploymentFinished extends Notification
+{
+    public function via($notifiable): array
+    {
+        return ['discord'];
+    }
+
+    public function toDiscord($notifiable): DiscordMessage
+    {
+        return DiscordMessage::make()->content('Deployment finished ✅');
+    }
+}
+```
+
+### Route on demand
+
+Pass a bot **channel id** (a guild channel or a user's DM channel) or an explicit route:
+
+```php
+use Illuminate\Support\Facades\Notification;
+use Arthurpar06\DiscordNotifier\Routing\DiscordRoute;
+
+// bare channel id → delivered by the bot
+Notification::route('discord', config('services.discord.admin_channel_id'))
+    ->notify(new DeploymentFinished);
+
+// explicit webhook
+Notification::route('discord', DiscordRoute::webhook(config('services.discord.webhook')))
+    ->notify(new DeploymentFinished);
+```
+
+### Route from a model
+
+Give the notifiable a `routeNotificationForDiscord()` returning its own channel id — e.g. a stored private DM channel:
+
+```php
+class User extends Authenticatable
+{
+    use Notifiable;
+
+    public function routeNotificationForDiscord(): string
+    {
+        return $this->discord_private_channel_id;
+    }
+}
+
+$user->notify(new DeploymentFinished);
+```
+
+## How routing is resolved
+
+The route value is resolved to a transport, unambiguously:
+
+| Route value | Transport |
+|---|---|
+| `DiscordRoute::webhook($url)` / `DiscordRoute::channel($id)` | as declared |
+| a string starting with `http` | webhook |
+| a numeric snowflake string | bot channel (`POST /channels/{id}/messages`) |
+
+A DM to a user and a message to a guild channel are the same bot call — store the channel id and send.
 
 ## Testing
 
 ```bash
 composer test
 ```
-
-## Changelog
-
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
-
-## Contributing
-
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
-
-## Security Vulnerabilities
-
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
-
-## Credits
-
-- [:author_name](https://github.com/:author_username)
-- [All Contributors](../../contributors)
 
 ## License
 
