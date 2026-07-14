@@ -13,6 +13,7 @@ use Arthurpar06\DiscordNotifier\Notifications\DiscordChannel;
 use Arthurpar06\DiscordNotifier\Routing\DiscordRoute;
 use Arthurpar06\DiscordNotifier\Tests\Fixtures\TestDiscordNotification;
 use Arthurpar06\DiscordNotifier\Transport\BotTransport;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Http;
 
 /*
@@ -171,7 +172,9 @@ dataset('empty routes', [
     'empty array' => [[]],
 ]);
 
-it('reports a missing route for every empty route value', function (mixed $value) {
+it('skips a notifiable for every empty route value', function (mixed $value) {
+    Http::fake();
+
     $notifiable = new class($value)
     {
         public function __construct(private mixed $value) {}
@@ -181,6 +184,14 @@ it('reports a missing route for every empty route value', function (mixed $value
             return $this->value;
         }
     };
+
+    (new DiscordChannel)->send($notifiable, new TestDiscordNotification);
+
+    Http::assertNothingSent();
+})->with('empty routes');
+
+it('reports a missing route for every empty on-demand route value', function (mixed $value) {
+    $notifiable = (new AnonymousNotifiable)->route('discord', $value);
 
     expect(fn () => (new DiscordChannel)->send($notifiable, new TestDiscordNotification))
         ->toThrow(InvalidDiscordRouteException::class, 'No Discord route was provided');
@@ -197,8 +208,9 @@ it('builds the exact unresolvable-route message', function () {
 
 it('builds the exact missing-route message', function () {
     expect(InvalidDiscordRouteException::missing()->getMessage())->toBe(
-        'No Discord route was provided. Pass one via Notification::route(\'discord\', ...) '.
-        'or implement routeNotificationForDiscord() on the notifiable.'
+        'No Discord route was provided. Pass a destination to '.
+        'Notification::route(\'discord\', ...): a DiscordRoute, a webhook URL, '.
+        'or a numeric channel id snowflake.'
     );
 });
 
