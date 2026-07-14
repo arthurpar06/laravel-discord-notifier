@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.0](https://github.com/arthurpar06/laravel-discord-notifier/compare/v0.1.0...v0.2.0) (2026-07-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* notifiables without a Discord route are skipped rather than raising InvalidDiscordRouteException. Callers relying on that exception to detect an unrouted notifiable must check the route themselves.
+
+### Features
+
+* skip notifiables that have no discord route ([d15aca5](https://github.com/arthurpar06/laravel-discord-notifier/commit/d15aca549d07deb86f6d37c0cfc28733e238c193))
+
 ## 0.1.0 (2026-07-14)
 
 
