@@ -24,13 +24,14 @@
         "illuminate/contracts": "^11.0||^12.0||^13.0"
     },
     "require-dev": {
+        "larastan/larastan": "^3.0",
         "laravel/pint": "^1.14",
         "nunomaduro/collision": "^8.8",
-        "larastan/larastan": "^3.0",
         "orchestra/testbench": "^11.0.0||^10.0.0||^9.0.0",
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-arch": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0",
+        "pestphp/pest-plugin-type-coverage": "^4.0",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan-deprecation-rules": "^2.0",
         "phpstan/phpstan-phpunit": "^2.0",
@@ -52,7 +53,9 @@
         "prepare": "@php vendor/bin/testbench package:discover --ansi",
         "analyse": "vendor/bin/phpstan analyse",
         "test": "vendor/bin/pest",
-        "test-coverage": "vendor/bin/pest --coverage",
+        "test-coverage": "vendor/bin/pest --coverage --min=100",
+        "test-type-coverage": "vendor/bin/pest --type-coverage --min=100",
+        "test-mutate": "vendor/bin/pest --mutate --everything --covered-only --min=97",
         "format": "vendor/bin/pint"
     },
     "config": {
@@ -66,6 +69,11 @@
         "laravel": {
             "providers": [
                 "Arthurpar06\\DiscordNotifier\\DiscordNotifierServiceProvider"
+            ]
+        },
+        "phpstan/extension-installer": {
+            "ignore": [
+                "tomasvotruba/type-coverage"
             ]
         }
     },
