@@ -153,13 +153,24 @@ class User extends Authenticatable
 {
     use Notifiable;
 
-    public function routeNotificationForDiscord(): string
+    public function routeNotificationForDiscord(): ?string
     {
-        return $this->discord_private_channel_id;
+        return $this->discord_private_channel_id ?: null;
     }
 }
 
 $user->notify(new DeploymentFinished);
+```
+
+Returning `null` is safe: a notifiable with no route is skipped, so `discord` can
+sit in a `via()` list alongside other channels even when only some of your users
+have linked their account.
+
+```php
+public function via($notifiable): array
+{
+    return ['mail', 'discord']; // users without Discord just get the mail
+}
 ```
 
 ## How routing is resolved
@@ -173,6 +184,18 @@ The route value is resolved to a transport, unambiguously:
 | a numeric snowflake string | bot channel (`POST /channels/{id}/messages`) |
 
 A DM to a user and a message to a guild channel are the same bot call — store the channel id and send.
+
+### When there is no route
+
+| Situation | Result |
+|---|---|
+| a notifiable returns `null`, `''` or `[]` | **skipped** — no message, no exception |
+| `Notification::route('discord', '')` | **throws** — you asked for delivery but gave no destination |
+| any route that is neither a URL nor a snowflake (e.g. `'not-a-url'`) | **throws** — a present-but-invalid route is a misconfiguration |
+
+An absent route and a malformed one are different things. A model with nothing
+stored is ordinary and stays quiet; a value that was meant to be a destination
+and isn't fails loudly.
 
 ## Testing
 
