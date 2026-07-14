@@ -1,5 +1,28 @@
 # Contributing
 
+## Quality gates
+
+Every pull request must clear four enforced gates. They run in the dedicated
+`quality` GitHub Actions job (a single PHP 8.5 + Laravel 13 run with the `pcov`
+coverage driver); the compatibility matrix in `run-tests.yml` only runs the
+suite. Run them locally with:
+
+| Command | Gate | Threshold |
+|---|---|---|
+| `composer analyse` | PHPStan (larastan) static analysis | level `max` (10), no baseline/suppressions |
+| `composer test-type-coverage` | Type declaration coverage | `100%` |
+| `composer test-coverage` | Line coverage over `src` | `100%` |
+| `composer test-mutate` | Mutation score (`--everything --covered-only`) | `≥ 97%` |
+
+The last two need a coverage driver (`pcov` or Xdebug) installed in your PHP
+CLI; without one Pest reports "No code coverage driver is available."
+
+The mutation floor sits at 97% (actual score 97.49%): five surviving mutants are
+equivalent — `array_values()` on a variadic-built list, a `(string)` cast on an
+already-string value, and a redundant empty-string route guard whose inner check
+rejects the same input — so they cannot be killed without contorting the source.
+Raise the `--min` values as coverage improves; never lower them to hide weak tests.
+
 ## Commit messages
 
 This project uses [Conventional Commits](https://www.conventionalcommits.org/). Every commit is linted on pull requests, and the release version is derived from these types:
