@@ -1,0 +1,55 @@
+name: quality
+
+on:
+  push:
+    paths:
+      - '**.php'
+      - 'phpstan.neon.dist'
+      - 'phpunit.xml.dist'
+      - 'composer.json'
+      - 'composer.lock'
+      - '.github/workflows/quality.yml'
+  pull_request:
+    paths:
+      - '**.php'
+      - 'phpstan.neon.dist'
+      - 'phpunit.xml.dist'
+      - 'composer.json'
+      - 'composer.lock'
+      - '.github/workflows/quality.yml'
+
+# The compatibility matrix in run-tests.yml stays on coverage: none and only runs
+# the suite. This single job owns the enforced quality bar: max-level static
+# analysis, 100% type coverage, 100% line coverage and the mutation-score floor.
+# It needs a coverage driver (pcov), so it runs once on one PHP + Laravel version.
+jobs:
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: pcov
+
+      - name: Install dependencies
+        run: |
+          composer require "laravel/framework:13.*" "orchestra/testbench:11.*" --no-interaction --no-update
+          composer update --prefer-stable --prefer-dist --no-interaction
+
+      - name: PHPStan (level max)
+        run: composer analyse
+
+      - name: Type coverage (100%)
+        run: composer test-type-coverage
+
+      - name: Line coverage (100%)
+        run: composer test-coverage
+
+      - name: Mutation score
+        run: composer test-mutate

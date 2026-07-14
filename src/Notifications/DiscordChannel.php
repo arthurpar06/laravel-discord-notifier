@@ -20,7 +20,7 @@ class DiscordChannel
 
     public function send(mixed $notifiable, Notification $notification): void
     {
-        $routeValue = method_exists($notifiable, 'routeNotificationFor')
+        $routeValue = is_object($notifiable) && method_exists($notifiable, 'routeNotificationFor')
             ? $notifiable->routeNotificationFor('discord', $notification)
             : null;
 

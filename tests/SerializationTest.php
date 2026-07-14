@@ -65,6 +65,19 @@ it('serializes allowed_mentions as an object', function () {
     ]);
 });
 
+it('serializes role mentions', function () {
+    $mentions = AllowedMentions::make()
+        ->parse([AllowedMentionType::Roles])
+        ->roles(['555', '666']);
+
+    $body = DiscordMessage::make()->content('x')->allowedMentions($mentions)->toArray();
+
+    expect($body['allowed_mentions'])->toBe([
+        'parse' => ['roles'],
+        'roles' => ['555', '666'],
+    ]);
+});
+
 it('drops nulls but keeps explicit false and empty arrays', function () {
     $body = DiscordMessage::make()
         ->content('x')

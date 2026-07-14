@@ -3,6 +3,7 @@
 namespace Arthurpar06\DiscordNotifier;
 
 use Arthurpar06\DiscordNotifier\Notifications\DiscordChannel;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Notifications\ChannelManager;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -27,7 +28,7 @@ class DiscordNotifierServiceProvider extends PackageServiceProvider
         // it in via() and be routed with Notification::route('discord', ...).
         $this->app->make(ChannelManager::class)->extend(
             'discord',
-            fn ($app): DiscordChannel => $app->make(DiscordChannel::class),
+            fn (Container $app): DiscordChannel => $app->make(DiscordChannel::class),
         );
     }
 }
