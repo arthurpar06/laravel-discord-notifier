@@ -23,6 +23,23 @@ class InvalidDiscordMessageException extends InvalidArgumentException
         );
     }
 
+    public static function componentsV2WithLegacyComponents(): self
+    {
+        return new self(
+            'A message with the IS_COMPONENTS_V2 flag cannot also set classic (V1) action rows; the two component systems are mutually exclusive.'
+        );
+    }
+
+    public static function emptyActionRow(): self
+    {
+        return new self('An action row must contain at least one button.');
+    }
+
+    public static function invalidButton(string $reason): self
+    {
+        return new self("Invalid Discord button: {$reason}.");
+    }
+
     public static function notAMessage(mixed $value): self
     {
         $type = get_debug_type($value);

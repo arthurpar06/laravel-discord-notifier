@@ -78,6 +78,33 @@ DiscordMessage::make()
 
 Only the fields you set are sent. Discord's limits (≤10 embeds, content ≤2000 chars, embed field caps, the `IS_COMPONENTS_V2` mutual-exclusivity rule, …) are validated when the message is serialized, with an exception that names the offending field.
 
+## Buttons
+
+Attach buttons with `->button()` (a single button in its own row) or `->actionRow()` (up to five buttons per row, up to five rows per message). Buttons are built through a named constructor per style, so you can't assemble an invalid combination:
+
+```php
+use Arthurpar06\DiscordNotifier\Components\Button;
+use Arthurpar06\DiscordNotifier\Embeds\DiscordEmbed;
+use Arthurpar06\DiscordNotifier\Messages\DiscordMessage;
+
+DiscordMessage::make()
+    ->embed(DiscordEmbed::make()->title('Deploy finished'))
+    ->actionRow(
+        Button::link('https://ci.example.com/builds/42', 'View build'),
+        Button::primary('redeploy', 'Redeploy'),
+    );
+```
+
+| Constructor | Style | Needs |
+|---|---|---|
+| `Button::link($url, $label = null)` | Link | a URL |
+| `Button::primary/secondary/success/danger($customId, $label)` | interactive | a `custom_id` |
+| `Button::premium($skuId)` | Premium | an SKU id |
+
+All non-premium buttons also support `->disabled()` and `->emoji('🔥')` (or a custom emoji array).
+
+> **Interactive buttons need your own interaction handling.** This package only *sends* messages. `link` and `premium` buttons work with nothing extra, but `primary`/`secondary`/`success`/`danger` buttons raise a Discord Interaction when clicked — if your application does not answer it (via a gateway or an HTTP interactions endpoint) within three seconds, Discord shows "This interaction failed." Reach for link buttons unless you already run an interaction handler.
+
 ## Sending notifications
 
 In your notification, list `discord` in `via()` and return a `DiscordMessage` from `toDiscord()`:

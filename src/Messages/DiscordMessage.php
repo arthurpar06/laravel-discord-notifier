@@ -2,6 +2,8 @@
 
 namespace Arthurpar06\DiscordNotifier\Messages;
 
+use Arthurpar06\DiscordNotifier\Components\ActionRow;
+use Arthurpar06\DiscordNotifier\Components\Button;
 use Arthurpar06\DiscordNotifier\Contracts\Arrayable;
 use Arthurpar06\DiscordNotifier\Embeds\DiscordEmbed;
 use Arthurpar06\DiscordNotifier\Enums\MessageFlag;
@@ -21,6 +23,8 @@ class DiscordMessage implements Arrayable
 
     public const MAX_EMBEDS = 10;
 
+    public const MAX_ACTION_ROWS = 5;
+
     protected ?string $content = null;
 
     /** @var array<int, DiscordEmbed> */
@@ -32,6 +36,9 @@ class DiscordMessage implements Arrayable
     protected array $flags = [];
 
     protected ?AllowedMentions $allowedMentions = null;
+
+    /** @var array<int, ActionRow> */
+    protected array $components = [];
 
     public static function make(): static
     {
@@ -90,6 +97,21 @@ class DiscordMessage implements Arrayable
         return $this;
     }
 
+    public function actionRow(Button ...$buttons): static
+    {
+        $this->components[] = new ActionRow(...$buttons);
+
+        return $this;
+    }
+
+    /**
+     * Attach a single button, wrapped in its own action row.
+     */
+    public function button(Button $button): static
+    {
+        return $this->actionRow($button);
+    }
+
     protected function usesComponentsV2(): bool
     {
         return in_array(MessageFlag::IsComponentsV2, $this->flags, true);
@@ -108,6 +130,14 @@ class DiscordMessage implements Arrayable
         if ($this->usesComponentsV2() && ($this->content !== null || $this->embeds !== [])) {
             throw InvalidDiscordMessageException::componentsV2Conflict();
         }
+
+        if ($this->usesComponentsV2() && $this->components !== []) {
+            throw InvalidDiscordMessageException::componentsV2WithLegacyComponents();
+        }
+
+        if (count($this->components) > self::MAX_ACTION_ROWS) {
+            throw InvalidDiscordMessageException::limitExceeded('components', count($this->components), self::MAX_ACTION_ROWS);
+        }
     }
 
     public function toArray(): array
@@ -120,6 +150,7 @@ class DiscordMessage implements Arrayable
             'tts' => $this->tts,
             'flags' => MessageFlag::combine($this->flags),
             'allowed_mentions' => $this->allowedMentions,
+            'components' => $this->components === [] ? null : $this->components,
         ]);
     }
 }
