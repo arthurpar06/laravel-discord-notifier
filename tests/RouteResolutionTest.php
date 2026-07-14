@@ -2,6 +2,7 @@
 
 use Arthurpar06\DiscordNotifier\Exceptions\InvalidDiscordRouteException;
 use Arthurpar06\DiscordNotifier\Routing\DiscordRoute;
+use Arthurpar06\DiscordNotifier\Routing\RouteType;
 
 it('uses a DiscordRoute instance as-is', function () {
     $route = DiscordRoute::webhook('https://discord.com/api/webhooks/1/abc');
@@ -21,6 +22,11 @@ it('resolves a snowflake string to a bot channel route', function () {
 
     expect($route->isBot())->toBeTrue()
         ->and($route->target())->toBe('123456789012345678');
+});
+
+it('exposes its type via the type() accessor', function () {
+    expect(DiscordRoute::channel('123')->type())->toBe(RouteType::Bot)
+        ->and(DiscordRoute::webhook('https://discord.com/api/webhooks/1/abc')->type())->toBe(RouteType::Webhook);
 });
 
 it('throws on an unresolvable route value', function () {
