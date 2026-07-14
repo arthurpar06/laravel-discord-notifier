@@ -6,7 +6,10 @@ use InvalidArgumentException;
 
 /**
  * Raised when a route value cannot be resolved to a webhook or bot channel, or
- * when no route is available for a notification at all.
+ * when an on-demand notification is routed to Discord with no destination.
+ *
+ * A notifiable that simply has no route is skipped by the channel rather than
+ * raising this, so only the on-demand path can reach missing().
  */
 class InvalidDiscordRouteException extends InvalidArgumentException
 {
@@ -23,8 +26,9 @@ class InvalidDiscordRouteException extends InvalidArgumentException
     public static function missing(): self
     {
         return new self(
-            'No Discord route was provided. Pass one via Notification::route(\'discord\', ...) '.
-            'or implement routeNotificationForDiscord() on the notifiable.'
+            'No Discord route was provided. Pass a destination to '.
+            'Notification::route(\'discord\', ...): a DiscordRoute, a webhook URL, '.
+            'or a numeric channel id snowflake.'
         );
     }
 }
