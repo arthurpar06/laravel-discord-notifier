@@ -21,7 +21,7 @@ jobs:
       # Maintains a Release PR from Conventional Commits; on merge it creates
       # the vX.Y.Z tag + GitHub Release, which the Packagist webhook publishes.
       - name: Run release-please
-        uses: googleapis/release-please-action@v4
+        uses: googleapis/release-please-action@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
