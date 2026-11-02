@@ -2,6 +2,7 @@
 
 use Arthurpar06\DiscordNotifier\Exceptions\InvalidDiscordMessageException;
 use Arthurpar06\DiscordNotifier\Exceptions\InvalidDiscordRouteException;
+use Arthurpar06\DiscordNotifier\Messages\SentMessage;
 use Arthurpar06\DiscordNotifier\Notifications\DiscordChannel;
 use Arthurpar06\DiscordNotifier\Tests\Fixtures\DiscordUser;
 use Arthurpar06\DiscordNotifier\Tests\Fixtures\ExplodingDiscordNotification;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 
 beforeEach(function () {
-    Http::fake();
+    Http::fake(['*' => Http::response(['id' => '111', 'channel_id' => '222'])]);
     config()->set('discord-notifier.bot.token', 'test-token');
 });
 
@@ -40,7 +41,7 @@ it('routes a bare webhook url to the webhook transport', function () {
     NotificationFacade::route('discord', 'https://discord.com/api/webhooks/1/abc')
         ->notify(new TestDiscordNotification('via hook'));
 
-    Http::assertSent(fn ($request) => $request->url() === 'https://discord.com/api/webhooks/1/abc'
+    Http::assertSent(fn ($request) => $request->url() === 'https://discord.com/api/webhooks/1/abc?wait=true'
         && $request['content'] === 'via hook');
 });
 
@@ -107,3 +108,19 @@ it('throws when the notification has no toDiscord method', function () {
 
     (new DiscordChannel)->send($notifiable, new Notification);
 })->throws(InvalidDiscordMessageException::class);
+
+it('returns the sent message from the channel', function () {
+    $notifiable = (new AnonymousNotifiable)->route('discord', '222');
+
+    $sent = (new DiscordChannel)->send($notifiable, new TestDiscordNotification('hi'));
+
+    expect($sent)->toBeInstanceOf(SentMessage::class)
+        ->and($sent->id)->toBe('111')
+        ->and($sent->channelId)->toBe('222');
+});
+
+it('returns null for a skipped notifiable', function () {
+    expect((new DiscordChannel)->send(new UnroutedDiscordUser, new TestDiscordNotification))->toBeNull();
+
+    Http::assertNothingSent();
+});

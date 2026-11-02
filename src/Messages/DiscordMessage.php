@@ -153,4 +153,18 @@ class DiscordMessage implements Arrayable
             'components' => $this->components === [] ? null : $this->components,
         ]);
     }
+
+    /**
+     * The serialized body for editing an existing message: the same as
+     * toArray() without `tts`, which Discord only accepts on creation.
+     *
+     * @return array<string, mixed>
+     */
+    public function toEditArray(): array
+    {
+        $payload = $this->toArray();
+        unset($payload['tts']);
+
+        return $payload;
+    }
 }

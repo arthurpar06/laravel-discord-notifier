@@ -46,4 +46,9 @@ class InvalidDiscordMessageException extends InvalidArgumentException
 
         return new self("A notification's toDiscord() must return a DiscordMessage instance, got [{$type}].");
     }
+
+    public static function invalidResponse(string $field): self
+    {
+        return new self("The Discord response did not contain a message [{$field}].");
+    }
 }

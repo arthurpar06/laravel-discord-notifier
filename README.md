@@ -173,6 +173,26 @@ public function via($notifiable): array
 }
 ```
 
+## Editing a message
+
+Notifications are fire-and-forget. To keep a handle on a message and change it later (a status that updates, a roster that fills up), use the `DiscordNotifier` service. `send()` returns a `SentMessage` carrying the Discord message id and channel id; store them, then pass the id to `edit()`:
+
+```php
+use Arthurpar06\DiscordNotifier\DiscordNotifier;
+use Arthurpar06\DiscordNotifier\Messages\DiscordMessage;
+
+$notifier = app(DiscordNotifier::class);
+
+$sent = $notifier->send($channelId, DiscordMessage::make()->content('Boarding: 2 pilots'));
+// keep $sent->id (and $sent->channelId) somewhere durable
+
+$notifier->edit($channelId, $sent->id, DiscordMessage::make()->content('Boarding: 3 pilots'));
+```
+
+The route can be a `DiscordRoute` or any string the [routing rules](#how-routing-is-resolved) accept, and it must be the route the message was sent to. Edits replace the message's content and embeds with what you pass; `tts` is not sent because Discord does not allow changing it. A message that no longer exists makes Discord answer 404, which surfaces as a request exception for you to handle (for example by sending a fresh message).
+
+The `discord` notification channel also returns the `SentMessage`, which Laravel exposes as `NotificationSent::$response`, or `null` when a notifiable without a route was skipped.
+
 ## How routing is resolved
 
 The route value is resolved to a transport, unambiguously:
