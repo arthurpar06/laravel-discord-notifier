@@ -23,22 +23,16 @@ class BotTransport implements Transport
 
     public function send(DiscordRoute $route, array $payload): SentMessage
     {
-        $response = $this->request()->post($this->endpoint($route), $payload)->throw();
-
-        /** @var array<array-key, mixed> $body */
-        $body = $response->json();
-
-        return SentMessage::fromResponse($body);
+        return SentMessage::fromHttpResponse(
+            $this->request()->post($this->endpoint($route), $payload)->throw()
+        );
     }
 
     public function edit(DiscordRoute $route, string $messageId, array $payload): SentMessage
     {
-        $response = $this->request()->patch($this->endpoint($route)."/{$messageId}", $payload)->throw();
-
-        /** @var array<array-key, mixed> $body */
-        $body = $response->json();
-
-        return SentMessage::fromResponse($body);
+        return SentMessage::fromHttpResponse(
+            $this->request()->patch($this->endpoint($route).'/'.rawurlencode($messageId), $payload)->throw()
+        );
     }
 
     protected function request(): PendingRequest

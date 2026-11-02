@@ -145,6 +145,42 @@ it('builds a sent message from a response', function () {
     expect($sent->id)->toBe('111')->and($sent->channelId)->toBe('222');
 });
 
+it('rejects a non-string channel id in a response', function () {
+    expect(fn () => SentMessage::fromResponse(['id' => '111', 'channel_id' => 222]))
+        ->toThrow(InvalidDiscordMessageException::class);
+});
+
+it('rejects an empty or non-json response body', function (mixed $body, int $status) {
+    Http::fake(['*' => Http::response($body, $status)]);
+    $bot = new BotTransport('secret', 'https://discord.com/api/v10');
+    $webhook = new WebhookTransport;
+    $channel = DiscordRoute::channel('123456789012345678');
+    $hook = DiscordRoute::webhook('https://discord.com/api/webhooks/1/abc');
+
+    foreach ([
+        fn () => $bot->send($channel, []),
+        fn () => $bot->edit($channel, '111', []),
+        fn () => $webhook->send($hook, []),
+        fn () => $webhook->edit($hook, '111', []),
+    ] as $call) {
+        expect($call)->toThrow(InvalidDiscordMessageException::class);
+    }
+})->with([
+    'empty 200' => ['', 200],
+    'null 204' => [null, 204],
+]);
+
+it('url-encodes the message id on edit', function () {
+    Http::fake(['*' => Http::response(['id' => '111', 'channel_id' => '222'])]);
+
+    (new BotTransport('secret', 'https://discord.com/api/v10'))
+        ->edit(DiscordRoute::channel('123'), 'a/b', []);
+    (new WebhookTransport)->edit(DiscordRoute::webhook('https://discord.com/api/webhooks/1/abc'), 'a/b', []);
+
+    Http::assertSent(fn ($request) => $request->url() === 'https://discord.com/api/v10/channels/123/messages/a%2Fb');
+    Http::assertSent(fn ($request) => $request->url() === 'https://discord.com/api/webhooks/1/abc/messages/a%2Fb');
+});
+
 it('builds the exact invalid response message', function () {
     expect(InvalidDiscordMessageException::invalidResponse('id')->getMessage())
         ->toBe('The Discord response did not contain a message [id].');
