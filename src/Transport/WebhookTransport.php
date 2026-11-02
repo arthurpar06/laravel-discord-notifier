@@ -16,26 +16,20 @@ class WebhookTransport implements Transport
 {
     public function send(DiscordRoute $route, array $payload): SentMessage
     {
-        $response = Http::asJson()
-            ->post($this->url($route->target(), '', ['wait' => 'true']), $payload)
-            ->throw();
-
-        /** @var array<array-key, mixed> $body */
-        $body = $response->json();
-
-        return SentMessage::fromResponse($body);
+        return SentMessage::fromHttpResponse(
+            Http::asJson()
+                ->post($this->url($route->target(), '', ['wait' => 'true']), $payload)
+                ->throw()
+        );
     }
 
     public function edit(DiscordRoute $route, string $messageId, array $payload): SentMessage
     {
-        $response = Http::asJson()
-            ->patch($this->url($route->target(), "/messages/{$messageId}"), $payload)
-            ->throw();
-
-        /** @var array<array-key, mixed> $body */
-        $body = $response->json();
-
-        return SentMessage::fromResponse($body);
+        return SentMessage::fromHttpResponse(
+            Http::asJson()
+                ->patch($this->url($route->target(), '/messages/'.rawurlencode($messageId)), $payload)
+                ->throw()
+        );
     }
 
     /**
