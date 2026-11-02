@@ -2,18 +2,20 @@
 
 namespace Arthurpar06\DiscordNotifier\Notifications;
 
+use Arthurpar06\DiscordNotifier\DiscordNotifier;
 use Arthurpar06\DiscordNotifier\Exceptions\InvalidDiscordMessageException;
 use Arthurpar06\DiscordNotifier\Exceptions\InvalidDiscordRouteException;
 use Arthurpar06\DiscordNotifier\Messages\DiscordMessage;
+use Arthurpar06\DiscordNotifier\Messages\SentMessage;
 use Arthurpar06\DiscordNotifier\Routing\DiscordRoute;
-use Arthurpar06\DiscordNotifier\Transport\TransportFactory;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Notification;
 
 /**
  * The Laravel notification channel registered as "discord". Resolves the route
  * for the notifiable (on-demand or via routeNotificationForDiscord), builds the
- * message from the notification, and hands it to the matching transport.
+ * message from the notification, and hands it to the DiscordNotifier service.
+ * It returns the sent message, which Laravel exposes as NotificationSent::$response.
  *
  * A notifiable that returns no route is skipped rather than rejected: having no
  * Discord destination is a normal state for a model whose owner never linked an
@@ -23,9 +25,9 @@ use Illuminate\Notifications\Notification;
  */
 class DiscordChannel
 {
-    public function __construct(protected TransportFactory $transports = new TransportFactory) {}
+    public function __construct(protected DiscordNotifier $notifier = new DiscordNotifier) {}
 
-    public function send(mixed $notifiable, Notification $notification): void
+    public function send(mixed $notifiable, Notification $notification): ?SentMessage
     {
         $routeValue = is_object($notifiable) && method_exists($notifiable, 'routeNotificationFor')
             ? $notifiable->routeNotificationFor('discord', $notification)
@@ -36,9 +38,11 @@ class DiscordChannel
                 throw InvalidDiscordRouteException::missing();
             }
 
-            return;
+            return null;
         }
 
+        // Resolved here, not in the service, because a route value can be any
+        // type and the service only accepts a DiscordRoute or a string.
         $route = DiscordRoute::resolve($routeValue);
 
         $message = method_exists($notification, 'toDiscord')
@@ -49,6 +53,6 @@ class DiscordChannel
             throw InvalidDiscordMessageException::notAMessage($message);
         }
 
-        $this->transports->for($route)->send($route, $message->toArray());
+        return $this->notifier->send($route, $message);
     }
 }
