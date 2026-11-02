@@ -229,7 +229,7 @@ it('treats an empty bot token as missing configuration', function () {
 })->throws(DiscordConfigurationException::class);
 
 it('trims a trailing slash from the api base before building the endpoint', function () {
-    Http::fake();
+    Http::fake(['*' => Http::response(['id' => '111', 'channel_id' => '222'])]);
 
     (new BotTransport('secret', 'https://discord.com/api/v10/'))
         ->send(DiscordRoute::channel('123'), ['content' => 'x']);

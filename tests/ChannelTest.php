@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 
 beforeEach(function () {
-    Http::fake();
+    Http::fake(['*' => Http::response(['id' => '111', 'channel_id' => '222'])]);
     config()->set('discord-notifier.bot.token', 'test-token');
 });
 
@@ -40,7 +40,7 @@ it('routes a bare webhook url to the webhook transport', function () {
     NotificationFacade::route('discord', 'https://discord.com/api/webhooks/1/abc')
         ->notify(new TestDiscordNotification('via hook'));
 
-    Http::assertSent(fn ($request) => $request->url() === 'https://discord.com/api/webhooks/1/abc'
+    Http::assertSent(fn ($request) => $request->url() === 'https://discord.com/api/webhooks/1/abc?wait=true'
         && $request['content'] === 'via hook');
 });
 
