@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.3.0](https://github.com/arthurpar06/laravel-discord-notifier/compare/v0.2.0...v0.3.0) (2026-11-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* Transport::send returns a SentMessage and Transport gains edit().
+
+### Features
+
+* add a DiscordNotifier service to send and edit messages ([db9cb44](https://github.com/arthurpar06/laravel-discord-notifier/commit/db9cb44da831d1c29ca4cbaad58db57233b9c0ee))
+* return the sent message from transports and add message editing ([3a15565](https://github.com/arthurpar06/laravel-discord-notifier/commit/3a15565ff7e4ea85abafd0070c31880206a6827b))
+
+
+### Bug Fixes
+
+* reject empty response bodies with the documented exception ([033c094](https://github.com/arthurpar06/laravel-discord-notifier/commit/033c09490b88d3b8a92e4fe8679c97c46853b547))
+
 ## [0.2.0](https://github.com/arthurpar06/laravel-discord-notifier/compare/v0.1.0...v0.2.0) (2026-07-14)
 
 
